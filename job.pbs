@@ -1,0 +1,3 @@
+#PBS -N	sleep
+#PBS -l select=1:ncpus=1:mem=3gb,walltime=00:10:00
+sleep 60
