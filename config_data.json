@@ -1,0 +1,7 @@
+{
+  "submit_cmd":"qsub",
+  "stat_cmd"  :"qstat",
+  "delete_cmd":"qdel",
+  "host_name":"user.palmetto.clemson.edu",
+  "user":"bramakr"
+}
