@@ -10,7 +10,7 @@ from subprocess import Popen, PIPE
 from pprint import pprint
 
 # Global variable for submit command
-jobID = 0
+jobID    = 0
 
 #Class resource which stores all the information provided by the user
 class Resource(object):
@@ -25,7 +25,8 @@ class Resource(object):
         dir_name = args.initialize
         if not os.path.isdir(dir_name):
            os.mkdir(dir_name)
-           os.chdir(dir_name)
+
+        os.chdir(dir_name)
         out_file = csv.writer(open(dir_name + ".csv", "w"))
         data = json.load(file)
         out_file.writerow(["submit_cmd", "stat_cmd", "delete_cmd", "host_name", "user"])
@@ -77,11 +78,11 @@ def map_job(args):
         writer = csv.writer(open(output_file, "w"))
         dd = 1
         writer.writerow([dd])
-        writer.writerow(["temp_jobId", "jobId", "cluster_name"])
-        if args.command == 'Submit':
-            writer.writerow([dd, jobID, args.to])
+        writer.writerow(["temp_jobId", "jobId"])
+        if args.cmd == 'submit':
+            writer.writerow([dd, jobID])
         else:
-            writer.writerow([dd, args.jobId, args.to])
+            writer.writerow([dd, args.jobId])
     else:
         with open(output_file, 'r+') as csvfile:
             reader = csv.reader(csvfile)
@@ -93,73 +94,12 @@ def map_job(args):
                 csvfile.write(str(key))
                 with open(output_file, 'a+') as csvfile:
                     writer = csv.writer(csvfile)
-                    if args.command == 'Submit':
-                        writer.writerow([key, jobID, args.to])
+                    if args.cmd == 'submit':
+                        writer.writerow([key, jobID])
                     else:
-                        writer.writerow([key, args.jobId, args.to])
+                        writer.writerow([key, args.jobId])
                 break
     os.chdir('..')
-
-#check for arguments provided by the user. This function checks for the initialization of the cluster, Submitting
-#a job, Deleting a job and querying a job
-def check_arguments():
-    if len(sys.argv) < 2:
-        parser.print_usage()
-        sys.exit(1)
-
-    #Initialize the cluster: Check for the arguments
-    if args.initialize is not None:
-        if not args.configFile:
-            print ("Usage: Configuration file [--configFile] needs to be provided for initialization of cluster")
-            sys.exit(1)
-        else:
-            r.init(args.configFile)
-
-    #Command: Check for the arguments
-    if args.command is not None:
-        
-        if not args.to:
-            print ("Usage: to [--to] needs to be provided as to which cluster the command needs to be submitted")
-            sys.exit(1)
-
-        if not os.path.isfile('parse_conf.csv'):
-            print ("Usage: [--initialize] Cluster is not initialized before")
-            sys.exit(1)
-    
-        with open('parse_conf.csv', 'r') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                r.__submit_cmd = row['submit_cmd']
-                r.__stat_cmd   = row['stat_cmd']
-                r.__delete_cmd = row['delete_cmd']
-                r.__host_name  = row['host_name']
-                r.__user       = row['user']
-
-        #Submit command: Check for the arguments
-        if args.command == 'Submit':
-            if not args.inFile:
-                print ("Usage: input file [--inFile] which contains the job to be submitted on the cluster")
-                sys.exit(1)
-
-            r.Submit(args.inFile, r.__user, r.__host_name, r.__submit_cmd, r.__stat_cmd)
-
-        
-        #Delete command: Check for the arguments
-        if args.command == 'Delete':
-            if not args.jobId:
-                print ("Usage: Job ID [--jobId] needs to be provided to delete the particular job")
-                sys.exit(1)
-            
-            r.Delete(args.jobId, r.__user, r.__host_name, r.__delete_cmd)
-
-        #Query command: Check for the arguments
-        if args.command == 'Query':
-            if not args.jobId:
-                print ("Usage: Job ID [--jobId] needs to be provided to query the particular job")
-                sys.exit(1)
-            r.Query(args.jobId, r.__user, r.__host_name, r.__stat_cmd)
-
-        map_job(args)
 
 #Creating an object of the class Resource
 r = Resource()
@@ -167,13 +107,44 @@ r = Resource()
 # Obtaining input from the user either to submit the jobs, delete the job or
 # query the job
 parser = argparse.ArgumentParser(description='Enter one of the following commands')
-parser.add_argument('--initialize', action="store", choices=['palmetto','stampede','osg'])
-parser.add_argument('--configFile', type=argparse.FileType('r'))
-parser.add_argument('--command', action="store", choices=['Submit','Query','Delete','Fetch'])
-parser.add_argument('--to', action="store", choices=['palmetto','stampede','osg'])
-parser.add_argument('--inFile', action="store")
-parser.add_argument('--jobId', action="store")
+subparsers = parser.add_subparsers(help = 'sub-command help', dest='cmd')
+parser_initialize = subparsers.add_parser('initialize', help='initialize help')
+parser_initialize.add_argument('initialize', action="store")
+parser_initialize.add_argument('--configFile', type=argparse.FileType('r'), required = True)
+
+parser_submit = subparsers.add_parser('submit', help='submit help')
+parser_submit.add_argument('--to', action="store", required = True)
+parser_submit.add_argument('--inFile', action="store", required = True)
+
+parser_delete = subparsers.add_parser('delete', help='delete help')
+parser_delete.add_argument('--to', action="store", required = True)
+parser_delete.add_argument('--jobId', action="store", required = True)
+
+parser_query = subparsers.add_parser('query', help='query help')
+parser_query.add_argument('--to', action="store", required = True)
+parser_query.add_argument('--jobId', action="store", required = True)
+
 args = parser.parse_args()
 
-#check for arguments if no arguments is provided then print help
-check_arguments()
+if args.cmd == 'initialize':
+    r.init(args.configFile)
+else:
+    os.chdir(args.to)
+    input_file = args.to + '.csv'
+    with open(input_file, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            r.__submit_cmd = row['submit_cmd']
+            r.__stat_cmd   = row['stat_cmd']
+            r.__delete_cmd = row['delete_cmd']
+            r.__host_name  = row['host_name']
+            r.__user       = row['user']
+    os.chdir('..')
+    if args.cmd == 'submit':
+        r.Submit(args.inFile, r.__user, r.__host_name, r.__submit_cmd, r.__stat_cmd)
+        map_job(args)
+    elif args.cmd == 'delete':
+        r.Delete(args.jobId, r.__user, r.__host_name, r.__delete_cmd)
+    elif args.cmd == 'query':
+        r.Query(args.jobId, r.__user, r.__host_name, r.__stat_cmd)
+
