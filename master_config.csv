@@ -1,8 +1,2 @@
-submit_cmd,stat_cmd,delete_cmd,host_name,user
-qsub,qstat,qdel,user.palmetto.clemson.edu,bramakr
-submit_cmd,stat_cmd,delete_cmd,host_name,user
-qsub,qstat,qdel,user.palmetto.clemson.edu,bramakr
-submit_cmd,stat_cmd,delete_cmd,host_name,user
-qsub,qstat,qdel,user.palmetto.clemson.edu,bramakr
-submit_cmd,stat_cmd,delete_cmd,host_name,user
-qsub,qstat,qdel,user.palmetto.clemson.edu,bramakr
+clusterName,submitCmd,statCmd,deleteCmd,hostName,user
+palmetto,qsub,qstat,qdel,user.palmetto.clemson.edu,bramakr
