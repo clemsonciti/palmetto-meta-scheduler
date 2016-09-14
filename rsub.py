@@ -50,10 +50,36 @@ class Scheduler(object):
     
     # Delete function: This will take the jobID as the input from the user and
     # deletes the particular job
-    def Delete(self):
+    def Delete(self, args):
+        os.chdir(args.to)
+        input_file = args.to + '_map_jobid.csv'
+        with open(input_file, 'r') as f:
+            reader = csv.reader(f)
+            next(reader)
+            for row in reader:
+                if row[0] == args.jobId:
+                    remoteJobId = row[2]
+                    break
         host     = self.user + '@' + self.hostName
-        qdelCmd  = self.deleteCmd + ' ' + Job_.jobId
+        qdelCmd  = self.deleteCmd + ' ' + remoteJobId
         Popen(['ssh', host,  qdelCmd], shell=False, stdout=PIPE)
+        os.chdir('..')
+
+    def Query(self, args):
+        os.chdir(args.to)
+        input_file = args.to + '_map_jobid.csv'
+        with open(input_file, 'r') as f:
+                reader = csv.reader(f)
+                next(reader)
+                for row in reader:
+                    if row[0] == args.jobId:
+                        remoteJobId = row[2]
+                        break
+        host     = self.user + '@' + self.hostName
+        qstatCmd  = self.statCmd + ' ' + '-xf' + ' ' + remoteJobId
+        Popen(['ssh', host,  qstatCmd], shell=False)
+        os.chdir('..')
+
 
 # Main class defining cluster (computing platform) resource, every element
 # is representing different cluster (special handling for Open Science Grid).
@@ -161,9 +187,13 @@ parser_delete = subparsers.add_parser('delete', description=' A utility that all
                                                             ' Usage: python rsub.py delete --jobId <ID of the job>')
 parser_delete.add_argument('--jobId', metavar='<Local jobId>', required = True, help='The ID of the job which needs to be deleted')
 
+parser_delete.add_argument('--to', metavar='<clusterName>', required = True, help='The name of the cluster on which the job has to be submitted')
+
 parser_query = subparsers.add_parser('query', description=' A utility that provides you the status of all the jobs that has been submitted using submit command. Usage: python rsub.py'
                                                           ' query --jobId <ID of the job>')
 parser_query.add_argument('--jobId', metavar='<Local jobId>', required = True, help='The ID of the job whose information is required')
+
+parser_query.add_argument('--to', metavar='<clusterName>', required = True, help='The name of the cluster on which the job has to be submitted')
 
 parser_joblist = subparsers.add_parser('joblist', description=' A utility that provides the history of all the jobs which has been submitted on all the clusters.'
                                                               ' Usage: python rsub.py joblist --to <cluster name>')
@@ -180,12 +210,12 @@ else:
         for row in reader:
             if row['clusterName'] == args.to:
                 Schduler_.Update(row['clusterName'], row['submitCmd'], row['statCmd'], row['deleteCmd'], row['hostName'], row['user'])
-                break;
+            break;
     if args.cmd == 'submit':
         Schduler_.Submit(args)
     elif args.cmd == 'delete':
-        Schduler_.Delete()
+        Schduler_.Delete(args)
     elif args.cmd == 'query':
-        Schduler_.Query()
+        Schduler_.Query(args)
     elif args.cmd == 'joblist':
         History_.Joblist(args)
