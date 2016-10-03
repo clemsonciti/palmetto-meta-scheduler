@@ -1,2 +1,0 @@
-clusterName,submitCmd,statCmd,deleteCmd,hostName,user
-palmetto,qsub,qstat,qdel,user.palmetto.clemson.edu,bramakr

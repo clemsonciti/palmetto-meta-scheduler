@@ -1,0 +1,10 @@
+verse = vanilla
+
+executable = hello.sh
+arguments = $(Process)
+
+error = err.$(Process)
+output = out.$(Process)
+log = log.$(Process)
+
+queue 10

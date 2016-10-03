@@ -1,8 +1,0 @@
-{
-  "clusterName"  :"palmetto",
-  "submitCmd"  :"qsub",
-  "statCmd"  :"qstat",
-  "deleteCmd":"qdel",
-  "hostName":"user.palmetto.clemson.edu",
-  "user":"bramakr"
-}
