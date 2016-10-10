@@ -1,8 +1,0 @@
-3
-tempJobId,clusterName,jobId,scriptFiles
-1,palmetto,"5411420.pbs02
-",job.pbs
-2,palmetto," 28087369.
-",hello.submit
-3,palmetto," 28087377.
-",hello.submit

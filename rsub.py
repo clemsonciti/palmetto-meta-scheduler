@@ -10,6 +10,24 @@ import argparse
 from subprocess import Popen, PIPE
 from pprint import pprint
 
+class job(object):
+    def __init__(self):
+        self.jobId = 1
+        self.JobName = "aa"
+        self.dest = "bb"
+
+    def translateScript(self):
+        print("translation")
+
+    def jobFetch(self):
+        print("Fetch")
+
+    def transferInpFile(self):
+        print("input files transfer")
+
+    def transferOutFiles(self):
+        print("output files transfer")
+
 class scheduler(object):
     def __init__(self, submitCmd, statCmd, deleteCmd, hostName, user, remoteId):
         self.submitCmd = submitCmd
@@ -22,7 +40,7 @@ class scheduler(object):
     # Submit function: This will take the inputs from the user and submits the
     # job on the palmetto. The list of files needed are copied from the local
     # machine to the palmetto node
-    def Submit(self, args):
+    def Submit(self, args, Job_):
         path = '/home/' + self.user
         host = self.user + '@' + self.hostName
         splitJobScriptLocation = args.inFile.split('/')
@@ -35,8 +53,20 @@ class scheduler(object):
     # Delete function: This will take the jobID as the input from the user and
     # deletes the particular job
     def Delete(self, args):
-        os.chdir(args.to)
-        input_file = args.to + '_map_jobid.csv'
+        input_file = 'map_jobid.csv'
+        with open(input_file, 'r') as f:
+            reader = csv.reader(f)
+            next(reader)
+            for row in reader:
+                if row[0] == args.jobId and row[1] == args.to:
+                    self.remoteId = row[2]
+                    return
+
+            print("Invalid jobId" + ' ' + args.jobId + ' ' + "to" + ' ' + args.to)
+            sys.exit()
+
+    def Query(self, args):
+        input_file = 'map_jobid.csv'
         with open(input_file, 'r') as f:
             reader = csv.reader(f)
             next(reader)
@@ -45,16 +75,36 @@ class scheduler(object):
                     self.remoteId = row[2]
                     break
 
-    def Query(self, args):
-        os.chdir(args.to)
-        input_file = args.to + '_map_jobid.csv'
-        with open(input_file, 'r') as f:
-            reader = csv.reader(f)
-            next(reader)
-            for row in reader:
-                if row[0] == args.jobId:
-                    self.remoteId = row[2]
-                    break
+    def from_json(self, config_json, args):
+        with open(config_json, 'r') as f:
+            params = json.load(f)
+            if(args.to == "palmetto"):
+                PBS_schduler_ = PBS(Schduler_)
+                PBS_schduler_.user = params["Scheduler"][0]["userName"]
+                PBS_schduler_.hostName = params["Scheduler"][0]["hostName"]
+                if args.cmd == 'submit':
+                    Job_ = job()
+                    PBS_schduler_.Submit(args, Job_)
+                elif args.cmd == 'delete':
+                    PBS_schduler_.Delete(args)
+                elif args.cmd == 'query':
+                    PBS_schduler_.Query(args)
+                elif args.cmd == 'joblist':
+                    History_ = History()
+                    History_.Joblist(args)
+            elif(args.to == "OSG"):
+                Condor_schduler_ = Condor(Schduler_)
+                Condor_schduler_.user = params["Scheduler"][1]["userName"]
+                Condor_schduler_.hostName = params["Scheduler"][1]["hostName"]
+                if args.cmd == 'submit':
+                    Condor_schduler_.Submit(args)
+                elif args.cmd == 'delete':
+                    Condor_schduler_.Delete(args)
+                elif args.cmd == 'query':
+                    Condor_schduler_.Query(args)
+                elif args.cmd == 'joblist':
+                    History_ = History()
+                    History_.Joblist(args)
 
 class PBS(scheduler):
 
@@ -62,30 +112,26 @@ class PBS(scheduler):
         self.submitCmd = "qsub"
         self.statCmd   = "qstat -xf"
         self.deleteCmd = "qdel"
-        self.hostName  = "user.palmetto.clemson.edu"
-        self.user      = "bramakr"
 
-    def Submit(self, args):
-        super(PBS, self).Submit(args)
+    def Submit(self, args, Job_):
+        super(PBS, self).Submit(args, Job_)
+        Logger_ = Logger()
         self.remoteId = self.remoteId.communicate()[0]
-        print(self.remoteId)
         if self.remoteId != '0':
-            Logger_.map_job(args, self.remoteId)
+            Logger_.map_job(args, self.remoteId, Job_)
 
     def Delete(self, args):
         super(PBS, self).Delete(args)
-        host = self.user + '@' + self.hostName
+        host = Schduler_.user + '@' + Schduler_.hostName
         print(host)
         qdelCmd = self.deleteCmd + ' ' + self.remoteId
         Popen(['ssh', host, qdelCmd], shell=False, stdout=PIPE)
-        os.chdir('..')
 
     def Query(self, args):
         super(PBS, self).Query(args)
         host = self.user + '@' + self.hostName
         qstatCmd = self.statCmd + ' ' + '-xf' + ' ' + self.remoteId
         Popen(['ssh', host, qstatCmd], shell=False)
-        os.chdir('..')
 
 
 class Condor(scheduler):
@@ -93,10 +139,9 @@ class Condor(scheduler):
         self.submitCmd = "condor_submit"
         self.statCmd = "condor_q"
         self.deleteCmd = "condor_rm"
-        self.hostName = "login.osgconnect.net"
-        self.user = "bramakr"
 
     def Submit(self, args):
+        Logger_ = Logger()
         super(Condor, self).Submit(args)
         for line in self.remoteId.stdout:
             if "cluster" in line:
@@ -108,6 +153,7 @@ class Condor(scheduler):
         super(Condor, self).Delete(args)
         host = self.user + '@' + self.hostName
         qdelCmd = self.deleteCmd + ' ' + self.remoteId
+        print(self.deleteCmd)
         Popen(['ssh', host, qdelCmd], shell=False, stdout=PIPE)
         os.chdir('..')
 
@@ -127,21 +173,16 @@ class Logger():
         self.key = 0
 
     # This function maps the local ID with the respective job id and store the file locally
-    def map_job(self, args, remoteId):
-        dir_name = args.to
+    def map_job(self, args, remoteId, Job_):
 
-        if not os.path.isdir(dir_name):
-            os.mkdir(dir_name)
-
-        os.chdir(dir_name)
-        output_file = args.to + "_map_jobid.csv"
+        output_file = "map_jobid.csv"
 
         if not os.path.isfile(output_file):
             writer = csv.writer(open(output_file, "w"))
             self.dd = 1
             writer.writerow([self.dd])
             writer.writerow(["tempJobId", "clusterName", "jobId", "scriptFiles"])
-            writer.writerow([self.dd, dir_name, remoteId, args.inFile])
+            writer.writerow([self.dd, args.to, remoteId, args.inFile])
         else:
             with open(output_file, 'r+') as csvfile:
                 reader = csv.reader(csvfile)
@@ -153,9 +194,22 @@ class Logger():
                     csvfile.write(str(self.key))
                     with open(output_file, 'a+') as csvfile:
                         writer = csv.writer(csvfile)
-                        writer.writerow([self.key, dir_name, remoteId, args.inFile])
+                        writer.writerow([self.key, args.to, remoteId, args.inFile])
+                        print(self.key)
                     break
-        os.chdir('..')
+
+# Class designed to store and analyze all information about jobs run so far
+class History(object):
+
+    def Joblist(self, args):
+        input_file = "map_jobid.csv"
+        with open(input_file, 'r') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[0] == 'tempJobId':
+                    print(row)
+                    for row in reader:
+                        print(row)
 
 # Obtaining input from the user either to submit the jobs, delete the job or
 # query the job
@@ -188,38 +242,4 @@ args = parser.parse_args()
 
 Schduler_ = scheduler("qsub", "qstat -xf", "qdel -w force", "user.palmetto.clemson.edu", "bramakr", "1")
 
-configFileLocation = str("config.json")
-with open(configFileLocation, 'r') as f:
-    data = json.load(f)
-pprint(data)
-
-if args.cmd == 'submit':
-    if data["Scheduler"] == "PBS":
-        PBS_schduler_ = PBS(Schduler_)
-        Logger_ = Logger()
-        PBS_schduler_.Submit(args)
-
-    elif data["Scheduler"] == "Condor":
-        Condor_schduler_ = Condor(Schduler_)
-        Logger_ = Logger()
-        Condor_schduler_.Submit(args)
-
-elif args.cmd == 'delete':
-    if data["Scheduler"] == "PBS":
-        PBS_schduler_ = PBS(Schduler_)
-        PBS_schduler_.Delete(args)
-
-    elif data["Scheduler"] == "Condor":
-        Condor_schduler_ = Condor(Schduler_)
-        Condor_schduler_.Delete(args)
-
-elif args.cmd == 'query':
-    if data["Scheduler"] == "PBS":
-        PBS_schduler_ = PBS(Schduler_)
-        PBS_schduler_.Query(args)
-
-    elif data["Scheduler"] == "Condor":
-        Condor_schduler_ = Condor(Schduler_)
-        Condor_schduler_.Query(args)
-#elif args.cmd == 'joblist':
-#   History_.Joblist(args)
+Schduler_.from_json("config.json", args)

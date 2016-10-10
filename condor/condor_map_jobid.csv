@@ -1,6 +1,0 @@
-2
-tempJobId,clusterName,jobId,scriptFiles
-1,condor," 28087399.
-",hello.submit
-2,condor," 28092246.
-",hello.submit
