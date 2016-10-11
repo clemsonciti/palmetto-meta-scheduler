@@ -11,10 +11,13 @@ from subprocess import Popen, PIPE
 from pprint import pprint
 
 class job(object):
-    def __init__(self):
-        self.jobId = 1
-        self.JobName = "aa"
-        self.dest = "bb"
+    def __init__(self, localId=None,  remoteId=None, jobName = None, RemoteTmp = None, transferInpFile = None, transferOutFile = None):
+        self.localId = localId
+        self.remoteId = remoteId
+        self.jobName = jobName
+        self.destPath = RemoteTmp
+        self.transferInpFile = transferInpFile
+        self.transferOutFile = transferOutFile
 
     def translateScript(self):
         print("translation")
@@ -22,20 +25,13 @@ class job(object):
     def jobFetch(self):
         print("Fetch")
 
-    def transferInpFile(self):
-        print("input files transfer")
-
-    def transferOutFiles(self):
-        print("output files transfer")
-
 class scheduler(object):
-    def __init__(self, submitCmd, statCmd, deleteCmd, hostName, user, remoteId):
+    def __init__(self, submitCmd, statCmd, deleteCmd, hostName, user):
         self.submitCmd = submitCmd
         self.statCmd   = statCmd
         self.deleteCmd = deleteCmd
         self.hostName  = hostName
         self.user      = user
-        self.remoteId  = remoteId
 
     # Submit function: This will take the inputs from the user and submits the
     # job on the palmetto. The list of files needed are copied from the local
@@ -47,32 +43,36 @@ class scheduler(object):
         inputFile = splitJobScriptLocation[len(splitJobScriptLocation) - 1]
         qsubCmd = self.submitCmd + ' ' + path + '/' + inputFile
         Popen(['scp', inputFile, host + ':' + path], shell=False)
+        if(Job_.transferInpFile is not None):
+            for f in Job_.transferInpFile:
+                print(f)
+                Popen(['scp', f, host + ':' + path], shell=False)
         sleep(1)
-        self.remoteId = subprocess.Popen(['ssh', host, qsubCmd], shell=False, stdout=subprocess.PIPE)
+        Job_.remoteId = subprocess.Popen(['ssh', host, qsubCmd], shell=False, stdout=subprocess.PIPE)
 
     # Delete function: This will take the jobID as the input from the user and
     # deletes the particular job
-    def Delete(self, args):
+    def Delete(self, args, Job_):
         input_file = 'map_jobid.csv'
         with open(input_file, 'r') as f:
             reader = csv.reader(f)
             next(reader)
             for row in reader:
                 if row[0] == args.jobId and row[1] == args.to:
-                    self.remoteId = row[2]
+                    Job_.remoteId = row[2]
                     return
 
             print("Invalid jobId" + ' ' + args.jobId + ' ' + "to" + ' ' + args.to)
             sys.exit()
 
-    def Query(self, args):
+    def Query(self, args, Job_):
         input_file = 'map_jobid.csv'
         with open(input_file, 'r') as f:
             reader = csv.reader(f)
             next(reader)
             for row in reader:
                 if row[0] == args.jobId:
-                    self.remoteId = row[2]
+                    Job_.remoteId = row[2]
                     break
 
     def from_json(self, config_json, args):
@@ -82,11 +82,14 @@ class scheduler(object):
                 PBS_schduler_ = PBS(Schduler_)
                 PBS_schduler_.user = params["Scheduler"][0]["userName"]
                 PBS_schduler_.hostName = params["Scheduler"][0]["hostName"]
+                RemoteTmp = params["Scheduler"][0]["RemoteTmp"]
                 if args.cmd == 'submit':
-                    Job_ = job()
+                    print(args.transferInpFiles)
+                    Job_ = job(0, 0, args.inFile, RemoteTmp, args.transferInpFiles, args.transferOutFiles)
                     PBS_schduler_.Submit(args, Job_)
                 elif args.cmd == 'delete':
-                    PBS_schduler_.Delete(args)
+                    Job_ = job()
+                    PBS_schduler_.Delete(args, Job_)
                 elif args.cmd == 'query':
                     PBS_schduler_.Query(args)
                 elif args.cmd == 'joblist':
@@ -96,12 +99,16 @@ class scheduler(object):
                 Condor_schduler_ = Condor(Schduler_)
                 Condor_schduler_.user = params["Scheduler"][1]["userName"]
                 Condor_schduler_.hostName = params["Scheduler"][1]["hostName"]
+                RemoteTmp = params["Scheduler"][0]["RemoteTmp"]
                 if args.cmd == 'submit':
-                    Condor_schduler_.Submit(args)
+                    Job_ = job(0,0,args.inFile, RemoteTmp, args.transferInpFiles, args.transferOutFiles)
+                    Condor_schduler_.Submit(args, Job_)
                 elif args.cmd == 'delete':
-                    Condor_schduler_.Delete(args)
+                    Job_ = job()
+                    Condor_schduler_.Delete(args, Job_)
                 elif args.cmd == 'query':
-                    Condor_schduler_.Query(args)
+                    Job_ = job()
+                    Condor_schduler_.Query(args, Job_)
                 elif args.cmd == 'joblist':
                     History_ = History()
                     History_.Joblist(args)
@@ -116,21 +123,21 @@ class PBS(scheduler):
     def Submit(self, args, Job_):
         super(PBS, self).Submit(args, Job_)
         Logger_ = Logger()
-        self.remoteId = self.remoteId.communicate()[0]
-        if self.remoteId != '0':
-            Logger_.map_job(args, self.remoteId, Job_)
+        Job_.remoteId = Job_.remoteId.communicate()[0]
+        if Job_.remoteId != '0':
+            Logger_.map_job(args, Job_.remoteId)
 
-    def Delete(self, args):
-        super(PBS, self).Delete(args)
+    def Delete(self, args, Job_):
+        super(PBS, self).Delete(args, Job_)
         host = Schduler_.user + '@' + Schduler_.hostName
         print(host)
-        qdelCmd = self.deleteCmd + ' ' + self.remoteId
+        qdelCmd = self.deleteCmd + ' ' + Job_.remoteId
         Popen(['ssh', host, qdelCmd], shell=False, stdout=PIPE)
 
-    def Query(self, args):
-        super(PBS, self).Query(args)
+    def Query(self, args, Job_):
+        super(PBS, self).Query(args, Job_)
         host = self.user + '@' + self.hostName
-        qstatCmd = self.statCmd + ' ' + '-xf' + ' ' + self.remoteId
+        qstatCmd = self.statCmd + ' ' + '-xf' + ' ' + Job_.remoteId
         Popen(['ssh', host, qstatCmd], shell=False)
 
 
@@ -140,27 +147,28 @@ class Condor(scheduler):
         self.statCmd = "condor_q"
         self.deleteCmd = "condor_rm"
 
-    def Submit(self, args):
+    def Submit(self, args, Job_):
         Logger_ = Logger()
-        super(Condor, self).Submit(args)
-        for line in self.remoteId.stdout:
+        super(Condor, self).Submit(args, Job_)
+        for line in Job_.remoteId.stdout:
             if "cluster" in line:
-                self.remoteId = line.split("cluster", 1)[1]
-                if self.remoteId != '0':
-                    Logger_.map_job(args, self.remoteId)
+                Job_.remoteId = line.split("cluster", 1)[1]
+                print(Job_.remoteId )
+                if Job_.remoteId != '0':
+                    Logger_.map_job(args, Job_.remoteId)
 
-    def Delete(self, args):
-        super(Condor, self).Delete(args)
+    def Delete(self, args, Job_):
+        super(Condor, self).Delete(args, Job_)
         host = self.user + '@' + self.hostName
-        qdelCmd = self.deleteCmd + ' ' + self.remoteId
+        qdelCmd = self.deleteCmd + ' ' + Job_.remoteId
         print(self.deleteCmd)
         Popen(['ssh', host, qdelCmd], shell=False, stdout=PIPE)
         os.chdir('..')
 
-    def Query(self, args):
-        super(Condor, self).Query(args)
+    def Query(self, args, Job_):
+        super(Condor, self).Query(args, Job_)
         host = self.user + '@' + self.hostName
-        qstatCmd = self.statCmd + ' ' + self.remoteId
+        qstatCmd = self.statCmd + ' ' + Job_.remoteId
         Popen(['ssh', host, qstatCmd], shell=False)
         os.chdir('..')
 
@@ -173,7 +181,7 @@ class Logger():
         self.key = 0
 
     # This function maps the local ID with the respective job id and store the file locally
-    def map_job(self, args, remoteId, Job_):
+    def map_job(self, args, remoteId):
 
         output_file = "map_jobid.csv"
 
@@ -185,6 +193,7 @@ class Logger():
             writer.writerow([self.dd, args.to, remoteId, args.inFile])
         else:
             with open(output_file, 'r+') as csvfile:
+                print("logger")
                 reader = csv.reader(csvfile)
                 for self.row in reader:
                     self.key = self.row[0]
@@ -223,6 +232,9 @@ parser_submit = subparsers.add_parser('submit', description=' A utility that all
                                                             ' be parsed and job will be sent to the scheduler. Usage: python rsub.py submit --to <cluster_name> --inFile <input file>')
 parser_submit.add_argument('--inFile', metavar='<inputFile pbs format>', required = True, help='The script file which contains the commands which needs to be executed')
 parser_submit.add_argument('--to', metavar='<clusterName>', required = True, help='The name of the cluster on which the job has to be submitted')
+parser_submit.add_argument('--transferInpFiles', metavar='<Input files required by script file to run>', help='The extra files needed by the script file to run', nargs='+')
+parser_submit.add_argument('--transferOutFiles', metavar='<Output files obtained after submitting the job>', help='The output files generated after submitting the job', nargs='+')
+
 
 parser_delete = subparsers.add_parser('delete', description=' A utility that allows you to delete a job that was submitted using submit command.'
                                                             ' Usage: python rsub.py delete --jobId <ID of the job>')
@@ -240,6 +252,6 @@ parser_joblist.add_argument('--to', metavar='<clusterName>', required = True, he
 
 args = parser.parse_args()
 
-Schduler_ = scheduler("qsub", "qstat -xf", "qdel -w force", "user.palmetto.clemson.edu", "bramakr", "1")
+Schduler_ = scheduler("qsub", "qstat -xf", "qdel -w force", "user.palmetto.clemson.edu", "bramakr")
 
 Schduler_.from_json("config.json", args)
