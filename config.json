@@ -1,14 +1,16 @@
 {
-  "Scheduler":[
+  "Resource":[
 {
-  "Name":  "PBS",
+  "name":  "Palmetto",
+  "scheduler": "PBS",
   "hostName"  :"user.palmetto.clemson.edu",
   "userName"  :"bramakr",
   "RemoteTmp"  :"/home/bramakr"
 },
 
 {
-  "Name":  "Condor",
+  "name":  "OSG",
+  "scheduler": "Condor",
   "hostName"  :"login.osgconnect.net",
   "userName"  :"bramakr",
   "RemoteTmp"  :"/home/bramakr"
