@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import fileinput
 import sys
 import os
@@ -10,13 +11,17 @@ import argparse
 from subprocess import Popen, PIPE
 from pprint import pprint
 from logger import Logger
-from history import History
+from history import history
 from scheduler import scheduler
 from config import Config
 from job import job
 from query import query
+from query import parseQuery
 from delete import delete
-from joblist import joblist
+from delete import parseDelete
+from history import parseHistory
+from command import Command
+
 # Obtaining input from the user either to submit the jobs, delete the job or
 # query the job
 parser = argparse.ArgumentParser(description=' A wrapper to provide commands to the scheduler to execute certain task. The first task is to initialize the'
@@ -33,9 +38,9 @@ parser_submit.add_argument('--to', metavar='<clusterName>', required = True, hel
 parser_submit.add_argument('--transferInpFiles', metavar='<Input files required by script file to run>', help='The extra files needed by the script file to run', nargs='+')
 parser_submit.add_argument('--transferOutFiles', metavar='<Output files obtained after submitting the job>', help='The output files generated after submitting the job', nargs='+')
 
-query(subparsers)
-delete(subparsers)
-joblist(subparsers)
+parseQuery(subparsers)
+parseDelete(subparsers)
+parseHistory(subparsers)
 
 args = parser.parse_args()
 
@@ -48,4 +53,11 @@ elif args.cmd == 'query' or args.cmd == 'delete':
     jobId = args.jobId
 
 Config_ = Config()
-Config_.from_json("config.json", args)
+resourceObj, subScheduler = Config_.from_json("config.json", args)
+
+Command_ = Command()
+Command_.sel_cmd(subScheduler, resourceObj, args)
+
+
+
+

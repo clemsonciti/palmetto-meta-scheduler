@@ -15,5 +15,11 @@
   "userName"  :"bramakr",
   "RemoteTmp"  :"/home/bramakr"
 }
+],
+
+  "default":[
+{
+  "name": "Palmetto"
+}
 ]
 }

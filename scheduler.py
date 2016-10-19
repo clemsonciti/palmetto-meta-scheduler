@@ -13,10 +13,10 @@ from logger import Logger
 from resource import resource
 
 class scheduler(object):
-    def __init__(self, submitCmd, statCmd, deleteCmd):
-        self.submitCmd = submitCmd
-        self.statCmd   = statCmd
-        self.deleteCmd = deleteCmd
+    def __init__(self):
+        self.submitCmd = "qsub"
+        self.statCmd = "qstat -xf"
+        self.deleteCmd = "qdel"
 
     # Submit function: This will take the inputs from the user and submits the
     # job on the palmetto. The list of files needed are copied from the local
@@ -70,7 +70,8 @@ class PBS(scheduler):
     def Submit(self, args, Job_, resource_):
         super(PBS, self).Submit(args, Job_, resource_)
         Logger_ = Logger()
-        Job_.remoteId = Job_.remoteId.communicate()[0]
+        for line in Job_.remoteId.stdout:
+            Job_.remoteId =  line.rstrip()
         if Job_.remoteId != '0':
             Logger_.map_job(args, Job_.remoteId)
 
@@ -100,6 +101,8 @@ class Condor(scheduler):
         for line in Job_.remoteId.stdout:
             if "cluster" in line:
                 Job_.remoteId = line.split("cluster", 1)[1]
+                #for line in Job_.remoteId.stdout:
+                Job_.remoteId = Job_.remoteId.rstrip()
                 print(Job_.remoteId )
                 if Job_.remoteId != '0':
                     Logger_.map_job(args, Job_.remoteId)
