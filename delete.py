@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import fileinput
 import sys
 import os
@@ -10,17 +11,41 @@ import subprocess
 import argparse
 from subprocess import Popen, PIPE
 from pprint import pprint
-from submit import submit
+from config import Config
+from scheduler import scheduler
+from scheduler import PBS
+from scheduler import Condor
 
-def parseDelete(subparsers):
-    parser_delete = subparsers.add_parser('delete', description=' A utility that allows you to delete a job that was submitted using submit command.'
-                                                                ' Usage: python rsub.py delete --jobId <ID of the job>')
+# Obtaining input from the user to delete the job.
+# This takes the arguments from the user such as the job id and cluster name
+parser = argparse.ArgumentParser(description=' A utility that allows you to delete a job that was submitted using submit command.'
+                                             ' Usage: python rsub.py delete --jobId <ID of the job>')
 
-    parser_delete.add_argument('--jobId', metavar='<Local jobId>', required = True, help='The ID of the job which needs to be deleted')
-    parser_delete.add_argument('--to', metavar='<clusterName>', required = True, help='The name of the cluster on which the job has to be submitted')
+parser.add_argument('--jobId', metavar='<Local jobId>', required = True, help='The ID of the job which needs to be deleted')
+parser.add_argument('--to', metavar='<clusterName>', required = True, help='The name of the cluster on which the job has to be submitted')
+parser.add_argument('--transferType', metavar='<Method to transfer files>', help='The method in which files needs to be transferred')
 
-def delete(schduler, resource, args):
-    with open('data') as f1:
-        Job_ = pickle.load(f1)
-        print(Job_)
-        schduler.Delete(args, Job_, resource)
+# Extract the arguments obtained from the user for the delete command
+args = parser.parse_args()
+jobId = args.jobId
+
+# The user will provide the data in the JSON format.
+# Call the function from_json to extract the contents from JSON file
+Config_ = Config()
+resourceObj, subScheduler = Config_.from_json("config.json", args)
+
+Schduler_ = scheduler()
+
+
+if(subScheduler == "PBS"):
+    subScheduler = PBS(Schduler_)
+elif(subScheduler == "Condor"):
+    subScheduler = Condor(Schduler_)
+
+# Reads the information of the particular job object. This is
+# done based on the jobId provided by the user
+inp_file = 'pickle_' + args.jobId
+with open(inp_file, 'rb') as f:
+    Job_ = pickle.load(f)
+    print(Job_.remoteId)
+subScheduler.Delete(args, Job_, resourceObj)
