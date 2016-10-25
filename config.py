@@ -16,6 +16,7 @@ from scheduler import Condor
 from job import job
 from resource import resource
 
+# Config function to read config data provided by user
 class Config(object):
 
     def from_json(self, config_json, args):
@@ -30,5 +31,5 @@ class Config(object):
                     remoteTmp = item["RemoteTmp"]
                     print(hostName)
 
-                    resource_ = resource(userName,hostName, remoteTmp)
+                    resource_ = resource(userName, hostName, remoteTmp)
                     return resource_, subScheduler
