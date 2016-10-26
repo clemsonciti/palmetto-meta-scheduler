@@ -19,17 +19,17 @@ from resource import resource
 # Config function to read config data provided by user
 class Config(object):
 
-    def from_json(self, config_json, args):
+    # This function loads the data provided by the user and assigns it to the username, hostname etc.
+    # Resource object is also created with initializing these parameters
+    def from_json(self, config_json, clusterName):
         with open(config_json, 'r') as f:
             params = json.load(f)
             for item in params["Resource"]:
-                print(item['name'])
-                if(args.to == item['name']):
+                if(clusterName == item['name']):
                     subScheduler = item["scheduler"]
                     userName = item["userName"]
                     hostName =  item["hostName"]
                     remoteTmp = item["RemoteTmp"]
-                    print(hostName)
 
                     resource_ = resource(userName, hostName, remoteTmp)
                     return resource_, subScheduler

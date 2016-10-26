@@ -1,7 +1,7 @@
 import pickle
 from subprocess import Popen
 from logger import Logger
-from command import abstract
+from abstract import abstract
 
 class scheduler(object):
     def __init__(self):
@@ -26,7 +26,6 @@ class scheduler(object):
     # deletes the particular job
     def Delete(self, args, Job_, resource_):
         host = resource_.userName + '@' + resource_.hostName
-        print(host)
         qdelCmd = self.deleteCmd + ' ' + Job_.remoteId
         abstract_ = abstract(args.transferType)
         abstract_.abstractType(qdelCmd, host)
@@ -34,10 +33,8 @@ class scheduler(object):
     def Query(self, args, Job_, resource_):
         host = resource_.userName + '@' + resource_.hostName
         qstatCmd = self.statCmd + ' ' + Job_.remoteId
-        Popen(['ssh', host, qstatCmd], shell=False)
         abstract_ = abstract(args.transferType)
         abstract_.abstractType(qstatCmd, host)
-
 
 class PBS(scheduler):
 

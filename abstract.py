@@ -19,9 +19,13 @@ class abstract(object):
     # Command to transfer files by the user
     def abstract_cmd(self, inputFile, host, path, Job_):
         Popen(['scp', inputFile, host + ':' + path], shell=False)
+
         if (Job_.transferInpFile is not None):
             for f in Job_.transferInpFile:
-                print(f)
+                Popen(['scp', f, host + ':' + path], shell=False)
+
+        if (Job_.transferOutFile is not None):
+            for f in Job_.transferOutFile:
                 Popen(['scp', f, host + ':' + path], shell=False)
         sleep(1)
 

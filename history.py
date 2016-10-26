@@ -15,8 +15,12 @@ from subprocess import Popen, PIPE
 parser = argparse.ArgumentParser(description=' A utility that provides the history of all the jobs which has been submitted on all the clusters.'
                                                               ' Usage: python rsub.py history --to <cluster name>')
 
-parser.add_argument('--to', metavar='<clusterName>', required = True, help='The name of the cluster on which the job has to be submitted')
+parser.add_argument('--to', metavar='<clusterName>', help='The name of the cluster on which the job has to be submitted')
 
+# Reads the data present in the CSV file. This file contains the
+# information of the local ID and the respective pickle object.
+# The pickle object contains the complete information of the particular
+# job.
 input_file = "map_jobid.csv"
 with open(input_file, 'r') as f:
     reader = csv.reader(f)

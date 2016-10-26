@@ -1,9 +1,4 @@
-7
+2
 tempJobId,clusterName,filename
 1,Palmetto,pickle_1
 2,Palmetto,pickle_2
-3,OSG,pickle_3
-4,OSG,pickle_4
-5,Palmetto,pickle_5
-6,Palmetto,pickle_6
-7,Palmetto,pickle_7

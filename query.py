@@ -28,11 +28,13 @@ parser.add_argument('--transferType', metavar='<Method to transfer files>', help
 # Extract the arguments obtained from the user for the delete command
 args = parser.parse_args()
 jobId = args.jobId
+clusterName = args.to
+
 
 # The user will provide the data in the JSON format.
 # Call the function from_json to extract the contents from JSON file
 Config_ = Config()
-resourceObj, subScheduler = Config_.from_json("config.json", args)
+resourceObj, subScheduler = Config_.from_json("config.json", clusterName)
 
 Schduler_ = scheduler()
 
@@ -43,9 +45,8 @@ elif(subScheduler == "Condor"):
 
 # Reads the information of the particular job object. This is
 # done based on the jobId provided by the user
-inp_file = 'pickle_' + args.jobId
+inp_file = 'pickle_' + jobId
 with open(inp_file, 'rb') as f:
     Job_ = pickle.load(f)
-    print(Job_.remoteId)
 
 subScheduler.Query(args, Job_, resourceObj)

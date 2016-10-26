@@ -17,7 +17,7 @@ from scheduler import Condor
 from job import job
 from resource import resource
 from config import Config
-from command import abstract
+from abstract import abstract
 
 # Obtaining input from the user to submit the job.
 # This takes the arguments from the user such as the input file,
@@ -44,7 +44,7 @@ fileTransferType = args.transferType
 # The user will provide the data in the JSON format.
 # Call the function from_json to extract the contents from JSON file
 Config_ = Config()
-resourceObj, subScheduler = Config_.from_json("config.json", args)
+resourceObj, subScheduler = Config_.from_json("config.json", clusterName)
 
 Schduler_ = scheduler()
 
@@ -54,7 +54,7 @@ elif(subScheduler == "Condor"):
     subScheduler = Condor(Schduler_)
 
 # Job object is created with initializing the parameters
-Job_ = job(0, 0, args.inFile, resourceObj.remoteTmp, args.transferInpFiles, args.transferOutFiles)
+Job_ = job(0, 0, inputScriptFile, resourceObj.remoteTmp, inpFiles, outFiles)
 output_file = "map_jobid.csv"
 
 # Creates the pickle object for each Job. This stores the complete information

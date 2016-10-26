@@ -10,6 +10,7 @@ import argparse
 from subprocess import Popen, PIPE
 from pprint import pprint
 
+# Creating a job object and initializing the job paramaters.
 class job(object):
     def __init__(self, localId=None,  remoteId=None, jobName = None, RemoteTmp = None, transferInpFile = None, transferOutFile = None):
         self.localId = localId
@@ -21,6 +22,3 @@ class job(object):
 
     def translateScript(self):
         print("translation")
-
-    def jobFetch(self):
-        print("Fetch")
