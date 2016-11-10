@@ -22,13 +22,16 @@ parser = argparse.ArgumentParser(description=' A utility that allows you to dele
                                              ' Usage: python rsub.py delete --jobId <ID of the job>')
 
 parser.add_argument('--jobId', metavar='<Local jobId>', required = True, help='The ID of the job which needs to be deleted')
-parser.add_argument('--to', metavar='<clusterName>', required = True, help='The name of the cluster on which the job has to be submitted')
-parser.add_argument('--transferType', metavar='<Method to transfer files>', help='The method in which files needs to be transferred')
+parser.add_argument('--to', metavar='<clusterName>', help='The name of the cluster on which the job has to be submitted')
 
 # Extract the arguments obtained from the user for the delete command
 args = parser.parse_args()
 jobId = args.jobId
-clusterName = args.to
+
+if args.to is not None:
+    clusterName = args.to
+else:
+    clusterName = None
 
 # The user will provide the data in the JSON format.
 # Call the function from_json to extract the contents from JSON file

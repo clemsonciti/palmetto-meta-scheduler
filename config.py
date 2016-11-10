@@ -24,12 +24,17 @@ class Config(object):
     def from_json(self, config_json, clusterName):
         with open(config_json, 'r') as f:
             params = json.load(f)
+            if clusterName is None:
+                for item in params["default"]:
+                    clusterName = item["name"]
+
             for item in params["Resource"]:
                 if(clusterName == item['name']):
                     subScheduler = item["scheduler"]
                     userName = item["userName"]
                     hostName =  item["hostName"]
                     remoteTmp = item["RemoteTmp"]
+                    transferType = item["transferType"]
 
-                    resource_ = resource(userName, hostName, remoteTmp)
+                    resource_ = resource(userName, hostName, remoteTmp, transferType)
                     return resource_, subScheduler

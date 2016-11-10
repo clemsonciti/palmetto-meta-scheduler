@@ -5,7 +5,8 @@
   "scheduler": "PBS",
   "hostName"  :"user.palmetto.clemson.edu",
   "userName"  :"bramakr",
-  "RemoteTmp"  :"/home/bramakr"
+  "RemoteTmp"  :"/home/bramakr",
+  "transferType": "ssh"
 },
 
 {
@@ -13,7 +14,8 @@
   "scheduler": "Condor",
   "hostName"  :"login.osgconnect.net",
   "userName"  :"bramakr",
-  "RemoteTmp"  :"/home/bramakr"
+  "RemoteTmp"  :"/home/bramakr",
+  "transferType": "ssh"
 }
 ],
 

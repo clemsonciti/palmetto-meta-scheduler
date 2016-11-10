@@ -2,6 +2,7 @@ import pickle
 from subprocess import Popen
 from logger import Logger
 from abstract import abstract
+import os
 
 class scheduler(object):
     def __init__(self):
@@ -12,29 +13,29 @@ class scheduler(object):
     # Submit function: This will take the inputs from the user and submits the
     # job on the palmetto. The list of files needed are copied from the local
     # machine to the palmetto node
-    def Submit(self, args, Job_, resource_):
+    def Submit(self, fileName, Job_, resource_):
         path = resource_.remoteTmp
         host = resource_.userName + '@' + resource_.hostName
-        splitJobScriptLocation = args.inFile.split('/')
+        splitJobScriptLocation = fileName.split('/')
         inputFile = splitJobScriptLocation[len(splitJobScriptLocation) - 1]
         qsubCmd = self.submitCmd + ' ' + path + '/' + inputFile
-        abstract_ = abstract(args.transferType)
-        abstract_.abstract_cmd(inputFile, host, path, Job_)
-        Job_.remoteId = abstract_.abstractType(qsubCmd, host)
+        abstract_ = abstract()
+        abstract_.transferFiles(inputFile, host, path, Job_)
+        Job_.remoteId = abstract_.fileTransferType(qsubCmd, host, resource_.transferType)
 
     # Delete function: This will take the jobID as the input from the user and
     # deletes the particular job
-    def Delete(self, args, Job_, resource_):
+    def Delete(self, Job_, resource_):
         host = resource_.userName + '@' + resource_.hostName
         qdelCmd = self.deleteCmd + ' ' + Job_.remoteId
-        abstract_ = abstract(args.transferType)
-        abstract_.abstractType(qdelCmd, host)
+        abstract_ = abstract()
+        abstract_.fileTransferType(qdelCmd, host, resource_.transferType)
 
-    def Query(self, args, Job_, resource_):
+    def Query(self, Job_, resource_):
         host = resource_.userName + '@' + resource_.hostName
         qstatCmd = self.statCmd + ' ' + Job_.remoteId
-        abstract_ = abstract(args.transferType)
-        abstract_.abstractType(qstatCmd, host)
+        abstract_ = abstract()
+        abstract_.fileTransferType(qstatCmd, host, resource_.transferType)
 
 class PBS(scheduler):
 
@@ -47,7 +48,12 @@ class PBS(scheduler):
     # job on the palmetto. The list of files needed are copied from the local
     # machine to the palmetto node
     def Submit(self, args, Job_, filename, resource_):
-        super(PBS, self).Submit(args, Job_, resource_)
+        fileName = args.inFile
+        if os.path.splitext(fileName)[1] == ".pbs":
+            super(PBS, self).Submit(fileName, Job_, resource_)
+        elif os.path.splitext(fileName)[1] == ".submit":
+            print("condor")
+            fromCondortoPBS(fileName)
         Logger_ = Logger()
         for line in Job_.remoteId.stdout:
             Job_.remoteId =  line.rstrip()
@@ -59,10 +65,10 @@ class PBS(scheduler):
     # Delete function: This will take the jobID as the input from the user and
     # deletes the particular job
     def Delete(self, args, Job_, resource_):
-        super(PBS, self).Delete(args, Job_, resource_)
+        super(PBS, self).Delete(Job_, resource_)
 
     def Query(self, args, Job_, resource_):
-        super(PBS, self).Query(args, Job_, resource_)
+        super(PBS, self).Query(Job_, resource_)
 
 class Condor(scheduler):
     def __init__(self, scheduler):
@@ -74,8 +80,14 @@ class Condor(scheduler):
     # job on the OSG. The list of files needed are copied from the local
     # machine to the OSG node
     def Submit(self, args, Job_, filename, resource_):
+        fileName = args.inFile
         Logger_ = Logger()
-        super(Condor, self).Submit(args, Job_, resource_)
+        if os.path.splitext(fileName)[1] == ".submit":
+            super(Condor, self).Submit(fileName, Job_, resource_)
+        elif os.path.splitext(fileName)[1] == ".pbs":
+            file = Job_.fromPBStoCondor(fileName)
+            super(Condor, self).Submit(file, Job_, resource_)
+
         for line in Job_.remoteId.stdout:
             if "cluster" in line:
                 Job_.remoteId = line.split("cluster", 1)[1]
@@ -88,8 +100,8 @@ class Condor(scheduler):
 
     # Delete function: This will take the jobID as the input from the user and
     # deletes the particular job
-    def Delete(self, args, Job_, resource_):
-        super(Condor, self).Delete(args, Job_, resource_)
+    def Delete(self, Job_, resource_):
+        super(Condor, self).Delete(Job_, resource_)
 
-    def Query(self, args, Job_, resource_):
-        super(Condor, self).Query(args, Job_, resource_)
+    def Query(self, Job_, resource_):
+        super(Condor, self).Query(Job_, resource_)

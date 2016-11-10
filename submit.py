@@ -28,18 +28,20 @@ parser = argparse.ArgumentParser(description=' A wrapper to provide commands to 
                                              ' For example to initialize a cluster - Usage: python rsub.py initialize -h')
 
 parser.add_argument('--inFile', metavar='<inputFile pbs format>', required = True, help='The script file which contains the commands which needs to be executed')
-parser.add_argument('--to', metavar='<clusterName>', required = True, help='The name of the cluster on which the job has to be submitted')
-parser.add_argument('--transferType', metavar='<Method to transfer files>', help='The method in which files needs to be transferred')
+parser.add_argument('--to', metavar='<clusterName>', help='The name of the cluster on which the job has to be submitted')
 parser.add_argument('--transferInpFiles', metavar='<Input files required by script file to run>', help='The extra files needed by the script file to run', nargs='+')
 parser.add_argument('--transferOutFiles', metavar='<Output files obtained after submitting the job>', help='The output files generated after submitting the job', nargs='+')
 args = parser.parse_args()
 
 # Extract the arguments obtained from the user for the submit command
 inputScriptFile = args.inFile
-clusterName     = args.to
 inpFiles        = args.transferInpFiles
 outFiles        = args.transferOutFiles
-fileTransferType = args.transferType
+
+if args.to is not None:
+    clusterName = args.to
+else:
+    clusterName = None
 
 # The user will provide the data in the JSON format.
 # Call the function from_json to extract the contents from JSON file

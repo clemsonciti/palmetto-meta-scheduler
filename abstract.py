@@ -13,11 +13,9 @@ from pprint import pprint
 
 # Abstract class to hide the information of how the files are being transferred
 class abstract(object):
-    def __init__(self, transferType):
-        self.transferType = transferType
 
     # Command to transfer files by the user
-    def abstract_cmd(self, inputFile, host, path, Job_):
+    def transferFiles(self, inputFile, host, path, Job_):
         Popen(['scp', inputFile, host + ':' + path], shell=False)
 
         if (Job_.transferInpFile is not None):
@@ -32,7 +30,8 @@ class abstract(object):
     # Check the file transfer type and accordingly submit, delete or query
     # using that type. This provides flexibility for the user to provide commands
     # based on their needs
-    def abstractType(self, cmd, host):
-        if (self.transferType == 'ssh'):
+    def fileTransferType(self, cmd, host, transferType):
+        if (transferType == 'ssh'):
             remoteId = subprocess.Popen(['ssh', host, cmd], shell=False, stdout=subprocess.PIPE)
+            print(remoteId, host, cmd)
             return remoteId
