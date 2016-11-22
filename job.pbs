@@ -1,3 +1,5 @@
+#!/bin/bash
 #PBS -N	sleep
 #PBS -l select=1:ncpus=1:mem=3gb,walltime=00:10:00
+#PBS -t 1-5
 sleep 60

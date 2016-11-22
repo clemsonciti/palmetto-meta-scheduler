@@ -85,10 +85,13 @@ class Condor(scheduler):
         if os.path.splitext(fileName)[1] == ".submit":
             super(Condor, self).Submit(fileName, Job_, resource_)
         elif os.path.splitext(fileName)[1] == ".pbs":
-            file = Job_.fromPBStoCondor(fileName)
+            file, scriptFile = Job_.fromPBStoCondor(fileName)
+            print (scriptFile)
+            Job_.transferInpFile = scriptFile
             super(Condor, self).Submit(file, Job_, resource_)
 
         for line in Job_.remoteId.stdout:
+            print(line)
             if "cluster" in line:
                 Job_.remoteId = line.split("cluster", 1)[1]
                 Job_.remoteId = Job_.remoteId.rstrip()

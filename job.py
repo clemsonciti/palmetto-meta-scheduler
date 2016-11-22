@@ -23,8 +23,18 @@ class job(object):
     def translateScript(self):
         print("translation")
 
+    def defaultCondorCmds(self, f1, line):
+        f1.write(line.replace(line, "verse = vanilla" + '\n'))
+        f1.write("error = err.$(Process)" + '\n')
+        f1.write("output = out.$(Process)" + '\n')
+        f1.write("log = log.$(Process)" + '\n')
+        f1.write("Executable = foo.sh" + '\n')
+        f1.write("Arguments = $(Process)" + '\n')
+
     def fromPBStoCondor(self, fileName):
         k = 0
+        scriptFile = "foo.sh"
+        scf = open(scriptFile, 'w')
         file = "PBStoCondor.submit"
         with open(fileName, 'r') as f:
             f1 = open(file, 'w')
@@ -32,20 +42,22 @@ class job(object):
             for line in params:
                 print(line)
                 if '#PBS' in line:
+                    if '-l' in line:
+                        if "mem" in line:
+                            mem = line.split("mem")[1].split('walltime')[0].strip(',')
+                        f1.write("Request_memory" + ' ' + mem + '\n')
+                    if '-t' in line:
+                        PbsArr = line.split('-')[-1]
+                        f1.write("queue" + ' ' + PbsArr + '\n')
                     if k is 0:
-                        f1.write(line.replace(line, "verse = vanilla" + '\n'))
-                        f1.write("executable = hello.sh" + '\n')
-                        f1.write("arguments = $(Process)" + '\n')
-                        f1.write("error = err.$(Process)" + '\n')
-                        f1.write("output = out.$(Process)" + '\n')
-                        f1.write("log = log.$(Process)" + '\n')
-                        f1.write("queue 10" + '\n')
+                        self.defaultCondorCmds(f1, line)
                         k = k + 1;
                 else:
-                    f1.write(line)
+                    scf.write(line)
         f1.close()
         f.close()
-        return  file
+        scf.close()
+        return  file, scriptFile
 
     def fromCondortoPBS(self, fileName):
         with open(fileName, 'r') as f:

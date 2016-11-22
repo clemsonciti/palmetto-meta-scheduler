@@ -18,7 +18,7 @@ from scheduler import Condor
 
 # Obtaining input from the user to query the job.
 # This takes the arguments from the user such as the job id and cluster name
-parser = argparse.ArgumentParser(description=' A utility that provides you the status of all the jobs that has been submitted using submit command. Usage: python rsub.py'
+parser﻿tar zcvf asg2.tar.gz asg2 = argparse.ArgumentParser(description=' A utility that provides you the status of all the jobs that has been submitted using submit command. Usage: python rsub.py'
                                              ' query --jobId <ID of the job>')
 
 parser.add_argument('--jobId', metavar='<Local jobId>', required = True, help='The ID of the job whose information is required')
