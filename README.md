@@ -10,7 +10,7 @@ Meta-scheduler
 3. The following actions can be performed on the meta-scheduler:
 	• Submit a job to the scheduler
 	
-		submit.py script is used to submit the jobs. Transfer of files can be onto the cluster is done using ‘scp’ command. The                   number of files dependent to submit a job can be transferred
+		submit.py script is used to submit the jobs. Transfer of files can be onto the cluster is done using ‘scp’ command. The   number of files dependent to submit a job can be transferred
 	• Delete a job from the scheduler 
 		
 		delete.py script is used to delete the jobs
@@ -21,8 +21,7 @@ Meta-scheduler
 	 	
 		history.py shows all the jobs submitted to the cluster depending upon cluster
 		
-4.	This utility receives the input the user in the form of JSON format
-      •	The config.json is the file provided by the user. This includes some of the cluster information like:
+4. This utility receives the input the user in the form of JSON format•	The config.json is the file provided by the user. This includes some of the cluster information like:
             -	Name of the cluster
             -	Scheduler used for that cluster
             -	Hostname
