@@ -21,23 +21,28 @@ Meta-scheduler
 	 	
 		history.py shows all the jobs submitted to the cluster depending upon cluster
 		
-4. This utility receives the input the user in the form of JSON format•	The config.json is the file provided by the user. This includes some of the cluster information like:
-            -	Name of the cluster
-            -	Scheduler used for that cluster
-            -	Hostname
-            -	Username
-            -	Remote directory 
-            -	Transfer type (ssh, Putty)
-      •	The user can add ‘n’ number of cluster information in the config.json. If the cluster is not explicitly provided then the                 default value is set to “palmetto”
-      •	This file is configurable by the user at any point of time
-5.	Whenever each job is submitted, a corresponding pickle object is created. This pickle object is used to for further references. When the user wants to delete a job or query a job, then that corresponding pickle object is read and the expected output is displayed
-6.	The commands for submitting a job, deleting a job or querying a job for a particular cluster is provided internally as they are not likely to change
-7.	This utility also provides translation of jobscripts
-      •	From PBS to Condor
-            -	When the user submits a job with the PBS script to the OSG cluster. 
-      •	From Condor to PBS
-            -	When the user submits a job with the Condor script to the Palmetto cluster
-8.	We can transfer files that are required by the scripts as arguments during submission of the job. This will put the files into the directory specified by the user in the config.json file.
-9.	As the jobs are submitted locally, to ease the work of the users there is local id mapped to the remote id. The users can access the local id to query the details of that particular job.  map_jobid.csv is used to store the details of the jobs such as remote id, local id and the cluster information.
+4. This utility receives the input the user in the form of JSON format
+	• The config.json is the file provided by the user. This includes some of the cluster information like:
+		
+		Name of the cluster
+        Scheduler used for that cluster
+        Hostname
+        Username
+        Remote directory 
+        Transfer type (ssh, Putty)
+		
+	• The user can add ‘n’ number of cluster information in the config.json. If the cluster is not explicitly provided then the                 default value is set to “palmetto”
+	• This file is configurable by the user at any point of time
+5. Whenever each job is submitted, a corresponding pickle object is created. This pickle object is used to for further references. When the user wants to delete a job or query a job, then that corresponding pickle object is read and the expected output is displayed
+6. The commands for submitting a job, deleting a job or querying a job for a particular cluster is provided internally as they are not likely to change
+7. This utility also provides translation of jobscripts
+	• From PBS to Condor
+		
+		When the user submits a job with the PBS script to the OSG cluster. 
+    • From Condor to PBS
+		
+		When the user submits a job with the Condor script to the Palmetto cluster
+8. We can transfer files that are required by the scripts as arguments during submission of the job. This will put the files into the directory specified by the user in the config.json file.
+9. As the jobs are submitted locally, to ease the work of the users there is local id mapped to the remote id. The users can access the local id to query the details of that particular job.  map_jobid.csv is used to store the details of the jobs such as remote id, local id and the cluster information.
 
 
