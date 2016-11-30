@@ -1,23 +1,26 @@
 Meta-scheduler 
 
-1.	This is a utility to submit jobs locally. The user need not login to the actual cluster for submission of the jobs.
-2.	This is a utility provided to perform some actions on the scheduler.
-
-      •	Currently only two schedulers are supported. They are:
+1. This is a utility to submit jobs locally. The user need not login to the actual cluster for submission of the jobs.
+2. This is a utility provided to perform some actions on the scheduler. Currently only two schedulers are supported. They are:
 			
             -	PBS 
             -	Condor
 						
       •	PBS is used by the Palmetto cluster and Condor is used by the Open Science Grid (OSG)
-3.	The following actions can be performed on the meta-scheduler:
-      •	Submit a job to the scheduler
-             -	submit.py script is used to submit the jobs. Transfer of files can be onto the cluster is done using ‘scp’ command. The                   number of files dependent to submit a job can be transferred
-      •	Delete a job from the scheduler 
-            -	delete.py script is used to delete the jobs
-      •	Query the status of the job from the scheduler
-            -	query.py script is used to know statistics of the jobs
-      •	Obtain the complete history of jobs submitted by the user
-            -	history.py shows all the jobs submitted to the cluster depending upon cluster
+3. The following actions can be performed on the meta-scheduler:
+	• Submit a job to the scheduler
+	
+		submit.py script is used to submit the jobs. Transfer of files can be onto the cluster is done using ‘scp’ command. The                   number of files dependent to submit a job can be transferred
+	• Delete a job from the scheduler 
+		
+		delete.py script is used to delete the jobs
+    • Query the status of the job from the scheduler
+	  	
+		query.py script is used to know statistics of the jobs   
+     • Obtain the complete history of jobs submitted by the user
+	 	
+		history.py shows all the jobs submitted to the cluster depending upon cluster
+		
 4.	This utility receives the input the user in the form of JSON format
       •	The config.json is the file provided by the user. This includes some of the cluster information like:
             -	Name of the cluster
