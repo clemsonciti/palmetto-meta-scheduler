@@ -19,7 +19,8 @@ class abstract(object):
         Popen(['scp', inputFile, host + ':' + path], shell=False)
 
         if (Job_.transferInpFile is not None):
-                Popen(['scp', Job_.transferInpFile, host + ':' + path], shell=False)
+            for f in Job_.transferInpFile:
+                Popen(['scp', f, host + ':' + path], shell=False)
 
         if (Job_.transferOutFile is not None):
             for f in Job_.transferOutFile:
