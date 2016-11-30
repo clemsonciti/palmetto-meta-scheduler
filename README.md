@@ -2,9 +2,12 @@ Meta-scheduler
 
 1.	This is a utility to submit jobs locally. The user need not login to the actual cluster for submission of the jobs.
 2.	This is a utility provided to perform some actions on the scheduler.
+
       •	Currently only two schedulers are supported. They are:
+			
             -	PBS 
             -	Condor
+						
       •	PBS is used by the Palmetto cluster and Condor is used by the Open Science Grid (OSG)
 3.	The following actions can be performed on the meta-scheduler:
       •	Submit a job to the scheduler
