@@ -65,7 +65,7 @@ Create an account in Palmetto or OSG before running this application.
 			
 				Ex: query.py --jobId <jobId>
 				query.py --jobId 1
-				
+		
 		To know more information how to use script file, then you can use the command
 			
 			query.py --help
